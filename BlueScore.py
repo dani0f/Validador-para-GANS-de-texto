@@ -1,26 +1,32 @@
-
-from nltk.translate.bleu_score import sentence_bleu
+from nltk.translate.bleu_score import sentence_bleu,SmoothingFunction
 import csv
 
-def BleuScore(text,referenceList):
-	reference = []
-	for sentence in referenceList:
-		separated = sentence.split()
-		reference.append(separated)
-	candidate = text.split()
-	return(sentence_bleu(reference, candidate))
+def BleuScore(referencesList,candidate):
+        weights=(0.25,0.25,0.25,0.25)
+        smoothing_function= SmoothingFunction().method4
+        auto_reweigh = False
+        return(sentence_bleu(referencesList, candidate, weights=weights,smoothing_function=smoothing_function,auto_reweigh=auto_reweigh))
 
+def csvToList(maxCorpusLen,minStringLen,filename):
+        csvList = []        
+        with open(filename, newline='') as File:  
+                reader = csv.reader(File)
+                for row in reader:
+                        if(len(row[0]) >= minStringLen):
+                                csvList.append(row[0].split())
+                        if(len(csvList)==maxCorpusLen):
+                                break
+        return csvList
 
-
-referencesStringLen = 22  #numero de caracteres minimo de una referencia
-referenceLen = 100        #numero de referencias utilizadas
-referenceList = []        
-with open('corpus_good.csv', newline='') as File:  
-        reader = csv.reader(File)
-        for row in reader:
-                if(len(row[0]) >=  referencesStringLen):
-                        referenceList.append(row[0])
-                if(len(referenceList)==referenceLen):
-                        break
-print('BLEU score -> {}'.format(BleuScore("corona has become something else ugandan airport has misunderstood everything now extorting money from",referenceList)))
-print('BLEU score -> {}'.format(BleuScore("corona has become something else flowers airport has misunderstood everything now extorting money from",referenceList)))	     
+def BleuScoreFromTxt(referencesList,maxCorpusLen,minStringLen,filename):
+    scoreList = []
+    with open(filename, newline='') as File:  
+                reader = File.read().split("\n")
+                for row in reader:
+                        if(len(row) >= minStringLen):
+                                scoreList.append(BleuScore(referencesList,row.split()))
+                        if(len(scoreList)==maxCorpusLen):
+                                break
+    return scoreList
+    
+    
